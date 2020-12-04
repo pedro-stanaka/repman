@@ -6,7 +6,7 @@ namespace Buddy\Repman\Tests\Unit\Service\Organization;
 
 use Buddy\Repman\Query\User\Model\PackageName;
 use Buddy\Repman\Service\Dist;
-use Buddy\Repman\Service\Dist\Storage;
+use Buddy\Repman\Service\Dist\Storage\Storage;
 use Buddy\Repman\Service\Organization\PackageManager;
 use Buddy\Repman\Tests\Doubles\FakeDownloader;
 use League\Flysystem\Adapter\Local;
@@ -16,6 +16,7 @@ use League\Flysystem\Memory\MemoryAdapter;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
+use Prophecy\Prophecy\ObjectProphecy;
 
 final class PackageManagerTest extends TestCase
 {
@@ -27,10 +28,10 @@ final class PackageManagerTest extends TestCase
 
     protected function setUp(): void
     {
-        $basePath = dirname(__DIR__, 3);
+        $basePath = \dirname(__DIR__, 3);
         $this->filesystem = new Filesystem(new Local($basePath.'/Resources/fixtures/'));
         $this->manager = new PackageManager(
-            new Storage\StorageImpl(
+            new Storage(
                 new FakeDownloader(), new Filesystem(new MemoryAdapter())
             ),
             $this->filesystem
@@ -58,7 +59,7 @@ final class PackageManagerTest extends TestCase
 
     public function testReturnDistributionFilenameWhenExist(): void
     {
-        /** @phpstan-var mixed $storage */
+        /** @var ObjectProphecy|mixed $storage */
         $storage = $this->prophesize(Storage::class);
         $storage->has(Argument::type(Dist::class))->willReturn(true);
         $storage->download(Argument::cetera())->shouldNotBeCalled();
@@ -137,7 +138,7 @@ final class PackageManagerTest extends TestCase
         $repoFilesystem = new Filesystem(new Local($this->baseDir));
 
         return new PackageManager(
-            new Storage\StorageImpl(new FakeDownloader(), $repoFilesystem),
+            new Storage(new FakeDownloader(), $repoFilesystem),
             $repoFilesystem
         );
     }
